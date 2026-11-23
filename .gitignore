@@ -1,0 +1,21 @@
+# Credenciales y configuraciones privadas
+.env
+.env.*
+!.env.example
+
+# Archivos temporales
+*.log
+*.tmp
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Dependencias y herramientas
+/vendor/
+/node_modules/
+
+# Archivos de respaldo
+*.bak
+*.old
