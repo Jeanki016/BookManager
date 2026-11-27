@@ -8,9 +8,9 @@ require_once __DIR__ . '/../../models/Titulo.php';
 $db = (new Database())->conectar();
 $tituloModel = new Titulo($db);
 
-$id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
+$id = trim((string) ($_GET['id'] ?? ''));
 
-if (!$id || $id <= 0) {
+if ($id === '' || strlen($id) > 6) {
     header('Location: index.php');
     exit;
 }
@@ -25,15 +25,15 @@ if (!$titulo) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $idConfirmado = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
+    $idConfirmado = trim((string) ($_POST['id'] ?? ''));
 
-    if (!$idConfirmado || $idConfirmado !== $id) {
-        $error = 'El identificador del título no es válido.';
+    if ($idConfirmado !== $id) {
+        $error = 'El identificador del titulo no es valido.';
     } elseif ($tituloModel->delete($id)) {
         header('Location: index.php?msg=eliminado');
         exit;
     } else {
-        $error = 'No se pudo eliminar el título.';
+        $error = 'No se pudo eliminar el titulo.';
     }
 }
 
@@ -41,8 +41,10 @@ require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="mb-4">
-    <h2 class="fw-bold mb-1">Eliminar título</h2>
-    <p class="text-muted mb-0">Confirma la eliminación del registro seleccionado.</p>
+    <h2 class="fw-bold mb-1">Eliminar titulo</h2>
+    <p class="text-muted mb-0">
+        Confirma la eliminacion del registro seleccionado.
+    </p>
 </div>
 
 <div class="card border-0 shadow-sm">
@@ -56,19 +58,19 @@ require_once __DIR__ . '/../../includes/header.php';
 
         <div class="alert alert-warning">
             <i class="fas fa-exclamation-triangle me-2"></i>
-            ¿Estás seguro de que deseas eliminar este título?
-            Esta acción no se puede deshacer.
+            ¿Estas seguro de que deseas eliminar este titulo?
+            Esta accion no se puede deshacer.
         </div>
 
-        <h5 class="fw-bold mb-3">Datos del título</h5>
+        <h5 class="fw-bold mb-3">Datos del titulo</h5>
 
         <p>
             <strong>ID:</strong>
-            <?= (int) $titulo['id_titulo'] ?>
+            <?= htmlspecialchars($titulo['id_titulo'], ENT_QUOTES, 'UTF-8') ?>
         </p>
 
         <p>
-            <strong>Título:</strong>
+            <strong>Titulo:</strong>
             <?= htmlspecialchars($titulo['titulo'], ENT_QUOTES, 'UTF-8') ?>
         </p>
 
@@ -79,14 +81,18 @@ require_once __DIR__ . '/../../includes/header.php';
 
         <p>
             <strong>Precio:</strong>
-            RD$ <?= number_format((float) $titulo['precio'], 2) ?>
+            <?php if ($titulo['precio'] !== null): ?>
+                RD$ <?= number_format((float) $titulo['precio'], 2) ?>
+            <?php else: ?>
+                No especificado
+            <?php endif; ?>
         </p>
 
-        <form method="POST" action="eliminar.php?id=<?= (int) $id ?>">
-            <input type="hidden" name="id" value="<?= (int) $id ?>">
+        <form method="POST" action="eliminar.php?id=<?= urlencode($id) ?>">
+            <input type="hidden" name="id" value="<?= htmlspecialchars($id, ENT_QUOTES, 'UTF-8') ?>">
 
             <button type="submit" class="btn btn-danger">
-                <i class="fas fa-trash me-2"></i>Confirmar eliminación
+                <i class="fas fa-trash me-2"></i>Confirmar eliminacion
             </button>
 
             <a href="index.php" class="btn btn-secondary">

@@ -58,7 +58,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <?php foreach ($titulos as $titulo): ?>
                             <tr>
                                 <td>
-                                    <?= (int) $titulo['id_titulo'] ?>
+                                    <?= htmlspecialchars((string) $titulo['id_titulo'], ENT_QUOTES, 'UTF-8') ?>
                                 </td>
 
                                 <td class="fw-semibold">
@@ -70,29 +70,37 @@ require_once __DIR__ . '/../../includes/header.php';
                                 </td>
 
                                 <td>
-                                    <?= htmlspecialchars($titulo['nombre_pub'], ENT_QUOTES, 'UTF-8') ?>
+                                    <?= htmlspecialchars($titulo['nombre_pub'] ?? '', ENT_QUOTES, 'UTF-8') ?>
                                 </td>
 
                                 <td>
-                                    RD$ <?= number_format((float) $titulo['precio'], 2) ?>
+                                    <?php if ($titulo['precio'] !== null): ?>
+                                        RD$ <?= number_format((float) $titulo['precio'], 2) ?>
+                                    <?php else: ?>
+                                        No especificado
+                                    <?php endif; ?>
                                 </td>
 
                                 <td>
-                                    <?= number_format((int) $titulo['ventas_ytd']) ?>
+                                    <?= number_format((int) ($titulo['total_ventas'] ?? 0)) ?>
                                 </td>
 
                                 <td>
-                                    <?= htmlspecialchars($titulo['fecha_pub'] ?? 'No especificada', ENT_QUOTES, 'UTF-8') ?>
+                                    <?= htmlspecialchars(
+                                        $titulo['fecha_pub'] ?? 'No especificada',
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ) ?>
                                 </td>
 
                                 <td class="text-center">
-                                    <a href="editar.php?id=<?= (int) $titulo['id_titulo'] ?>"
+                                    <a href="editar.php?id=<?= urlencode((string) $titulo['id_titulo']) ?>"
                                        class="btn btn-sm btn-outline-primary"
                                        title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
 
-                                    <a href="eliminar.php?id=<?= (int) $titulo['id_titulo'] ?>"
+                                    <a href="eliminar.php?id=<?= urlencode((string) $titulo['id_titulo']) ?>"
                                        class="btn btn-sm btn-outline-danger"
                                        title="Eliminar"
                                        onclick="return confirm('¿Estás seguro de eliminar este título?');">

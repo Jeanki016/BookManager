@@ -6,30 +6,39 @@ class Tienda
 {
     private PDO $db;
 
-    private ?int $id_tienda = null;
+    private string $id_tienda = '';
     private string $nombre_tienda = '';
-    private ?string $direccion = null;
-    private ?string $ciudad = null;
-    private ?string $estado = null;
-    private ?string $codigo_postal = null;
+    private string $direcc_tienda = '';
+    private string $ciudad = '';
+    private string $estado = '';
+    private string $pais = '';
+    private string $cod_postal = '';
+    private string $terminos = '';
 
     public function __construct(PDO $db)
     {
         $this->db = $db;
     }
 
-    /**
-     * Valida los datos recibidos desde el formulario.
-     */
+   
     public function validar(array $datos): array
     {
         $errores = [];
 
-        $nombre = trim($datos['nombre_tienda'] ?? '');
-        $direccion = trim($datos['direccion'] ?? '');
-        $ciudad = trim($datos['ciudad'] ?? '');
-        $estado = trim($datos['estado'] ?? '');
-        $codigoPostal = trim($datos['codigo_postal'] ?? '');
+        $id = trim((string) ($datos['id_tienda'] ?? ''));
+        $nombre = trim((string) ($datos['nombre_tienda'] ?? ''));
+        $direccion = trim((string) ($datos['direcc_tienda'] ?? $datos['direccion'] ?? ''));
+        $ciudad = trim((string) ($datos['ciudad'] ?? ''));
+        $estado = trim((string) ($datos['estado'] ?? ''));
+        $pais = trim((string) ($datos['pais'] ?? ''));
+        $codigoPostal = trim((string) ($datos['cod_postal'] ?? $datos['codigo_postal'] ?? ''));
+        $terminos = trim((string) ($datos['terminos'] ?? ''));
+
+        if ($id === '') {
+            $errores[] = 'El codigo de la tienda es obligatorio.';
+        } elseif (strlen($id) > 4) {
+            $errores[] = 'El codigo no puede superar los 4 caracteres.';
+        }
 
         if ($nombre === '') {
             $errores[] = 'El nombre de la tienda es obligatorio.';
@@ -37,51 +46,52 @@ class Tienda
             $errores[] = 'El nombre no puede superar los 40 caracteres.';
         }
 
-        if (mb_strlen($direccion) > 80) {
-            $errores[] = 'La dirección no puede superar los 80 caracteres.';
+        if (mb_strlen($direccion) > 40) {
+            $errores[] = 'La direccion no puede superar los 40 caracteres.';
         }
 
-        if (mb_strlen($ciudad) > 40) {
-            $errores[] = 'La ciudad no puede superar los 40 caracteres.';
+        if (mb_strlen($ciudad) > 15) {
+            $errores[] = 'La ciudad no puede superar los 15 caracteres.';
         }
 
-        if (mb_strlen($estado) > 40) {
-            $errores[] = 'El estado no puede superar los 40 caracteres.';
+        if (mb_strlen($estado) > 2) {
+            $errores[] = 'El estado no puede superar los 2 caracteres.';
         }
 
-        if (mb_strlen($codigoPostal) > 10) {
-            $errores[] = 'El código postal no puede superar los 10 caracteres.';
+        if (mb_strlen($pais) > 3) {
+            $errores[] = 'El pais no puede superar los 3 caracteres.';
+        }
+
+        if (mb_strlen($codigoPostal) > 5) {
+            $errores[] = 'El codigo postal no puede superar los 5 caracteres.';
+        }
+
+        if (mb_strlen($terminos) > 6) {
+            $errores[] = 'Los terminos no pueden superar los 6 caracteres.';
         }
 
         return $errores;
     }
 
-    /**
-     * Carga los datos en las propiedades privadas.
-     */
+ 
     private function cargarDatos(array $datos): void
     {
-        $this->nombre_tienda = trim($datos['nombre_tienda'] ?? '');
+        $this->id_tienda = trim((string) ($datos['id_tienda'] ?? ''));
+        $this->nombre_tienda = trim((string) ($datos['nombre_tienda'] ?? ''));
 
-        $this->direccion = $this->valorOpcional($datos['direccion'] ?? null);
-        $this->ciudad = $this->valorOpcional($datos['ciudad'] ?? null);
-        $this->estado = $this->valorOpcional($datos['estado'] ?? null);
-        $this->codigo_postal = $this->valorOpcional($datos['codigo_postal'] ?? null);
+        $this->direcc_tienda = trim((string) ($datos['direcc_tienda'] ?? $datos['direccion'] ?? ''));
+        $this->ciudad = trim((string) ($datos['ciudad'] ?? ''));
+        $this->estado = trim((string) ($datos['estado'] ?? ''));
+        $this->pais = trim((string) ($datos['pais'] ?? ''));
+        $this->cod_postal = trim((string) ($datos['cod_postal'] ?? $datos['codigo_postal'] ?? ''));
+        $this->terminos = trim((string) ($datos['terminos'] ?? ''));
     }
 
-    /** Convierte campos opcionales vacíos en NULL.*/
-    private function valorOpcional(?string $valor): ?string
-    {
-        $valor = trim($valor ?? '');
-
-        return $valor === '' ? null : $valor;
-    }
-
-    /* Obtiene todas las tiendas.*/
+ 
     public function getAll(): array
     {
-        $sql = "SELECT id_tienda, nombre_tienda, direccion,
-                       ciudad, estado, codigo_postal
+        $sql = "SELECT id_tienda, nombre_tienda, direcc_tienda,
+                       ciudad, estado, pais, cod_postal, terminos
                 FROM tiendas
                 ORDER BY nombre_tienda ASC";
 
@@ -91,15 +101,17 @@ class Tienda
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /* Busca una tienda por su identificador.*/
-    public function getById(int $id): array|false
+   
+    public function getById(string $id): array|false
     {
-        if ($id <= 0) {
+        $id = trim($id);
+
+        if ($id === '' || strlen($id) > 4) {
             return false;
         }
 
-        $sql = "SELECT id_tienda, nombre_tienda, direccion,
-                       ciudad, estado, codigo_postal
+        $sql = "SELECT id_tienda, nombre_tienda, direcc_tienda,
+                       ciudad, estado, pais, cod_postal, terminos
                 FROM tiendas
                 WHERE id_tienda = :id";
 
@@ -109,43 +121,46 @@ class Tienda
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    /* Registra una nueva tienda. */
+    
     public function create(array $datos): bool
     {
-        $errores = $this->validar($datos);
-
-        if (!empty($errores)) {
+        if (!empty($this->validar($datos))) {
             return false;
         }
 
         $this->cargarDatos($datos);
 
         $sql = "INSERT INTO tiendas
-                    (nombre_tienda, direccion, ciudad, estado, codigo_postal)
+                    (id_tienda, nombre_tienda, direcc_tienda,
+                     ciudad, estado, pais, cod_postal, terminos)
                 VALUES
-                    (:nombre, :direccion, :ciudad, :estado, :codigo_postal)";
+                    (:id, :nombre, :direccion, :ciudad,
+                     :estado, :pais, :codigo_postal, :terminos)";
 
         $stmt = $this->db->prepare($sql);
 
         return $stmt->execute([
+            ':id' => $this->id_tienda,
             ':nombre' => $this->nombre_tienda,
-            ':direccion' => $this->direccion,
+            ':direccion' => $this->direcc_tienda,
             ':ciudad' => $this->ciudad,
             ':estado' => $this->estado,
-            ':codigo_postal' => $this->codigo_postal
+            ':pais' => $this->pais,
+            ':codigo_postal' => $this->cod_postal,
+            ':terminos' => $this->terminos
         ]);
     }
 
-    /* Actualiza una tienda existente.*/
-    public function update(int $id, array $datos): bool
+  
+    public function update(string $id, array $datos): bool
     {
-        if ($id <= 0 || !$this->getById($id)) {
+        $id = trim($id);
+
+        if ($id === '' || strlen($id) > 4 || !$this->getById($id)) {
             return false;
         }
 
-        $errores = $this->validar($datos);
-
-        if (!empty($errores)) {
+        if (!empty($this->validar($datos))) {
             return false;
         }
 
@@ -153,28 +168,34 @@ class Tienda
 
         $sql = "UPDATE tiendas
                 SET nombre_tienda = :nombre,
-                    direccion = :direccion,
+                    direcc_tienda = :direccion,
                     ciudad = :ciudad,
                     estado = :estado,
-                    codigo_postal = :codigo_postal
+                    pais = :pais,
+                    cod_postal = :codigo_postal,
+                    terminos = :terminos
                 WHERE id_tienda = :id";
 
         $stmt = $this->db->prepare($sql);
 
         return $stmt->execute([
             ':nombre' => $this->nombre_tienda,
-            ':direccion' => $this->direccion,
+            ':direccion' => $this->direcc_tienda,
             ':ciudad' => $this->ciudad,
             ':estado' => $this->estado,
-            ':codigo_postal' => $this->codigo_postal,
+            ':pais' => $this->pais,
+            ':codigo_postal' => $this->cod_postal,
+            ':terminos' => $this->terminos,
             ':id' => $id
         ]);
     }
 
     
-    public function delete(int $id): bool
+    public function delete(string $id): bool
     {
-        if ($id <= 0) {
+        $id = trim($id);
+
+        if ($id === '' || strlen($id) > 4) {
             return false;
         }
 

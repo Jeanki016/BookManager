@@ -1,17 +1,21 @@
 <?php
+
 declare(strict_types=1);
 
 class Titulo
 {
     private PDO $db;
 
+    private string $id_titulo = '';
     private string $titulo = '';
     private string $tipo = '';
-    private ?int $id_pub = null;
-    private float $precio = 0;
-    private int $ventas_ytd = 0;
+    private string $id_pub = '';
+    private ?float $precio = null;
+    private ?float $avance = null;
+    private ?int $total_ventas = null;
     private string $notas = '';
-    private ?string $fecha_pub = null;
+    private string $fecha_pub = '';
+    private string $contrato = '0';
 
     public function __construct(PDO $db)
     {
@@ -22,70 +26,98 @@ class Titulo
     {
         $errores = [];
 
-        $titulo = trim($datos['titulo'] ?? '');
-        $tipo = trim($datos['tipo'] ?? '');
-        $idPub = filter_var($datos['id_pub'] ?? null, FILTER_VALIDATE_INT);
+        $idTitulo = trim((string)($datos['id_titulo'] ?? ''));
+        $titulo = trim((string)($datos['titulo'] ?? ''));
+        $tipo = trim((string)($datos['tipo'] ?? ''));
+        $idPub = trim((string)($datos['id_pub'] ?? ''));
         $precio = $datos['precio'] ?? '';
-        $ventas = $datos['ventas_ytd'] ?? 0;
-        $fecha = trim($datos['fecha_pub'] ?? '');
+        $avance = $datos['avance'] ?? '';
+        $ventas = $datos['total_ventas'] ?? '';
+        $notas = trim((string)($datos['notas'] ?? ''));
+        $fecha = trim((string)($datos['fecha_pub'] ?? ''));
+        $contrato = trim((string)($datos['contrato'] ?? ''));
+
+        if ($idTitulo === '') {
+            $errores[] = 'El codigo del titulo es obligatorio.';
+        } elseif (strlen($idTitulo) > 6) {
+            $errores[] = 'El codigo no puede superar los 6 caracteres.';
+        }
 
         if ($titulo === '') {
-            $errores[] = 'El título del libro es obligatorio.';
-        } elseif (mb_strlen($titulo) > 100) {
-            $errores[] = 'El título no puede superar los 100 caracteres.';
+            $errores[] = 'El titulo del libro es obligatorio.';
+        } elseif (mb_strlen($titulo) > 60) {
+            $errores[] = 'El titulo no puede superar los 60 caracteres.';
         }
 
-        if (mb_strlen($tipo) > 30) {
-            $errores[] = 'El tipo no puede superar los 30 caracteres.';
+        if (mb_strlen($tipo) > 15) {
+            $errores[] = 'El tipo no puede superar los 15 caracteres.';
         }
 
-        if (!$idPub || $idPub <= 0 || !$this->publicadorExiste($idPub)) {
-            $errores[] = 'Debes seleccionar una editorial válida.';
+        if ($idPub === '' || strlen($idPub) > 4 || !$this->publicadorExiste($idPub)) {
+            $errores[] = 'Debes seleccionar una editorial valida.';
         }
 
-        if (!is_numeric($precio) || (float) $precio < 0) {
-            $errores[] = 'El precio debe ser un número igual o mayor que cero.';
+        if ($precio !== '' && (!is_numeric($precio) || (float)$precio < 0)) {
+            $errores[] = 'El precio debe ser un numero mayor o igual que cero.';
         }
 
-        if (filter_var($ventas, FILTER_VALIDATE_INT) === false || (int) $ventas < 0) {
-            $errores[] = 'Las ventas deben ser un número entero igual o mayor que cero.';
+        if ($avance !== '' && (!is_numeric($avance) || (float)$avance < 0)) {
+            $errores[] = 'El avance debe ser un numero mayor o igual que cero.';
         }
 
-        if (mb_strlen(trim($datos['notas'] ?? '')) > 200) {
-            $errores[] = 'Las notas no pueden superar los 200 caracteres.';
+        if ($ventas !== '' && (filter_var($ventas, FILTER_VALIDATE_INT) === false || (int)$ventas < 0)) {
+            $errores[] = 'Las ventas deben ser un numero entero mayor o igual que cero.';
         }
 
-        if ($fecha !== '') {
+        if (mb_strlen($notas) > 255) {
+            $errores[] = 'Las notas no pueden superar los 255 caracteres.';
+        }
+
+        if ($fecha === '') {
+            $errores[] = 'La fecha de publicacion es obligatoria.';
+        } else {
             $fechaValida = DateTime::createFromFormat('Y-m-d', $fecha);
 
             if (!$fechaValida || $fechaValida->format('Y-m-d') !== $fecha) {
-                $errores[] = 'La fecha de publicación no es válida.';
+                $errores[] = 'La fecha de publicacion no es valida.';
             }
+        }
+
+        if (!in_array($contrato, ['0', '1'], true)) {
+            $errores[] = 'El contrato debe ser 0 o 1.';
         }
 
         return $errores;
     }
 
-    private function publicadorExiste(int $id): bool
+    private function publicadorExiste(string $id): bool
     {
         $sql = "SELECT COUNT(*) FROM publicadores WHERE id_pub = :id";
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);
 
-        return (int) $stmt->fetchColumn() > 0;
+        return (int)$stmt->fetchColumn() > 0;
     }
 
     private function cargarDatos(array $datos): void
     {
-        $this->titulo = trim($datos['titulo'] ?? '');
-        $this->tipo = trim($datos['tipo'] ?? '');
-        $this->id_pub = (int) $datos['id_pub'];
-        $this->precio = (float) $datos['precio'];
-        $this->ventas_ytd = (int) ($datos['ventas_ytd'] ?? 0);
-        $this->notas = trim($datos['notas'] ?? '');
+        $this->id_titulo = trim((string)$datos['id_titulo']);
+        $this->titulo = trim((string)$datos['titulo']);
+        $this->tipo = trim((string)($datos['tipo'] ?? ''));
+        $this->id_pub = trim((string)$datos['id_pub']);
 
-        $fecha = trim($datos['fecha_pub'] ?? '');
-        $this->fecha_pub = $fecha === '' ? null : $fecha;
+        $precio = $datos['precio'] ?? '';
+        $avance = $datos['avance'] ?? '';
+        $ventas = $datos['total_ventas'] ?? '';
+
+        $this->precio = $precio === '' ? null : (float)$precio;
+        $this->avance = $avance === '' ? null : (float)$avance;
+        $this->total_ventas = $ventas === '' ? null : (int)$ventas;
+
+        $this->notas = trim((string)$datos['notas']);
+        $this->fecha_pub = trim((string)$datos['fecha_pub']);
+        $this->contrato = trim((string)$datos['contrato']);
     }
 
     public function getAll(): array
@@ -97,11 +129,13 @@ class Titulo
                     t.id_pub,
                     p.nombre_pub,
                     t.precio,
-                    t.ventas_ytd,
+                    t.avance,
+                    t.total_ventas,
                     t.notas,
-                    t.fecha_pub
+                    t.fecha_pub,
+                    t.contrato
                 FROM titulos t
-                INNER JOIN publicadores p
+                LEFT JOIN publicadores p
                     ON t.id_pub = p.id_pub
                 ORDER BY t.titulo ASC";
 
@@ -111,9 +145,11 @@ class Titulo
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getById(int $id): array|false
+    public function getById(string $id): array|false
     {
-        if ($id <= 0) {
+        $id = trim($id);
+
+        if ($id === '' || strlen($id) > 6) {
             return false;
         }
 
@@ -139,41 +175,44 @@ class Titulo
 
     public function create(array $datos): bool
     {
-        $errores = $this->validar($datos);
-
-        if (!empty($errores)) {
+        if (!empty($this->validar($datos))) {
             return false;
         }
 
         $this->cargarDatos($datos);
 
         $sql = "INSERT INTO titulos
-                    (titulo, tipo, id_pub, precio, ventas_ytd, notas, fecha_pub)
+                    (id_titulo, titulo, tipo, id_pub, precio,
+                     avance, total_ventas, notas, fecha_pub, contrato)
                 VALUES
-                    (:titulo, :tipo, :id_pub, :precio, :ventas, :notas, :fecha)";
+                    (:id_titulo, :titulo, :tipo, :id_pub, :precio,
+                     :avance, :total_ventas, :notas, :fecha_pub, :contrato)";
 
         $stmt = $this->db->prepare($sql);
 
         return $stmt->execute([
+            ':id_titulo' => $this->id_titulo,
             ':titulo' => $this->titulo,
             ':tipo' => $this->tipo,
             ':id_pub' => $this->id_pub,
             ':precio' => $this->precio,
-            ':ventas' => $this->ventas_ytd,
+            ':avance' => $this->avance,
+            ':total_ventas' => $this->total_ventas,
             ':notas' => $this->notas,
-            ':fecha' => $this->fecha_pub
+            ':fecha_pub' => $this->fecha_pub,
+            ':contrato' => $this->contrato
         ]);
     }
 
-    public function update(int $id, array $datos): bool
+    public function update(string $id, array $datos): bool
     {
-        if ($id <= 0 || !$this->getById($id)) {
+        $id = trim($id);
+
+        if ($id === '' || !$this->getById($id)) {
             return false;
         }
 
-        $errores = $this->validar($datos);
-
-        if (!empty($errores)) {
+        if (!empty($this->validar($datos))) {
             return false;
         }
 
@@ -184,9 +223,11 @@ class Titulo
                     tipo = :tipo,
                     id_pub = :id_pub,
                     precio = :precio,
-                    ventas_ytd = :ventas,
+                    avance = :avance,
+                    total_ventas = :total_ventas,
                     notas = :notas,
-                    fecha_pub = :fecha
+                    fecha_pub = :fecha_pub,
+                    contrato = :contrato
                 WHERE id_titulo = :id";
 
         $stmt = $this->db->prepare($sql);
@@ -196,16 +237,20 @@ class Titulo
             ':tipo' => $this->tipo,
             ':id_pub' => $this->id_pub,
             ':precio' => $this->precio,
-            ':ventas' => $this->ventas_ytd,
+            ':avance' => $this->avance,
+            ':total_ventas' => $this->total_ventas,
             ':notas' => $this->notas,
-            ':fecha' => $this->fecha_pub,
+            ':fecha_pub' => $this->fecha_pub,
+            ':contrato' => $this->contrato,
             ':id' => $id
         ]);
     }
 
-    public function delete(int $id): bool
+    public function delete(string $id): bool
     {
-        if ($id <= 0 || !$this->getById($id)) {
+        $id = trim($id);
+
+        if ($id === '' || !$this->getById($id)) {
             return false;
         }
 

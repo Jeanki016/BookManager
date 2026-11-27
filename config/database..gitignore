@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+class Database
+{
+    private string $host = "localhost";
+    private string $dbname = "base datos libreria";
+    private string $username = "root";
+    private string $password = "";
+    private ?PDO $conn = null;
+
+    public function conectar(): PDO
+    {
+        try {
+            $this->conn = new PDO(
+                "mysql:host={$this->host};port=3306;dbname={$this->dbname};charset=utf8mb4",
+                $this->username,
+                $this->password
+            );
+
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            $this->conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+
+            return $this->conn;
+
+        } catch (PDOException $e) {
+            error_log("Error de conexion MySQL: " . $e->getMessage());
+            die("Error de conexion a la base de datos local.");
+        }
+    }
+}

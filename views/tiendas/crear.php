@@ -11,20 +11,23 @@ $tiendaModel = new Tienda($db);
 $errores = [];
 
 $datos = [
+    'id_tienda' => '',
     'nombre_tienda' => '',
-    'direccion' => '',
+    'direcc_tienda' => '',
     'ciudad' => '',
     'estado' => '',
-    'codigo_postal' => ''
+    'pais' => '',
+    'cod_postal' => '',
+    'terminos' => ''
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $datos = array_merge($datos, $_POST);
 
-    $errores = $tiendaModel->validar($_POST);
+    $errores = $tiendaModel->validar($datos);
 
     if (empty($errores)) {
-        if ($tiendaModel->create($_POST)) {
+        if ($tiendaModel->create($datos)) {
             header('Location: index.php?msg=creado');
             exit;
         }
@@ -63,6 +66,25 @@ require_once __DIR__ . '/../../includes/header.php';
         <form method="POST" action="crear.php">
 
             <div class="mb-3">
+                <label for="id_tienda" class="form-label">
+                    Código de tienda *
+                </label>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="id_tienda"
+                    name="id_tienda"
+                    maxlength="4"
+                    required
+                    value="<?= htmlspecialchars($datos['id_tienda'], ENT_QUOTES, 'UTF-8') ?>"
+                    placeholder="Ejemplo: 7067"
+                >
+                <small class="text-muted">
+                    Código de máximo 4 caracteres.
+                </small>
+            </div>
+
+            <div class="mb-3">
                 <label for="nombre_tienda" class="form-label">
                     Nombre de la tienda *
                 </label>
@@ -78,14 +100,16 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
             <div class="mb-3">
-                <label for="direccion" class="form-label">Dirección</label>
+                <label for="direcc_tienda" class="form-label">
+                    Dirección
+                </label>
                 <input
                     type="text"
                     class="form-control"
-                    id="direccion"
-                    name="direccion"
-                    maxlength="80"
-                    value="<?= htmlspecialchars($datos['direccion'], ENT_QUOTES, 'UTF-8') ?>"
+                    id="direcc_tienda"
+                    name="direcc_tienda"
+                    maxlength="40"
+                    value="<?= htmlspecialchars($datos['direcc_tienda'], ENT_QUOTES, 'UTF-8') ?>"
                 >
             </div>
 
@@ -97,7 +121,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         class="form-control"
                         id="ciudad"
                         name="ciudad"
-                        maxlength="40"
+                        maxlength="15"
                         value="<?= htmlspecialchars($datos['ciudad'], ENT_QUOTES, 'UTF-8') ?>"
                     >
                 </div>
@@ -109,21 +133,52 @@ require_once __DIR__ . '/../../includes/header.php';
                         class="form-control"
                         id="estado"
                         name="estado"
-                        maxlength="40"
+                        maxlength="2"
                         value="<?= htmlspecialchars($datos['estado'], ENT_QUOTES, 'UTF-8') ?>"
                     >
                 </div>
             </div>
 
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="pais" class="form-label">País</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="pais"
+                        name="pais"
+                        maxlength="3"
+                        value="<?= htmlspecialchars($datos['pais'], ENT_QUOTES, 'UTF-8') ?>"
+                    >
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="cod_postal" class="form-label">
+                        Código postal
+                    </label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="cod_postal"
+                        name="cod_postal"
+                        maxlength="5"
+                        value="<?= htmlspecialchars($datos['cod_postal'], ENT_QUOTES, 'UTF-8') ?>"
+                    >
+                </div>
+            </div>
+
             <div class="mb-3">
-                <label for="codigo_postal" class="form-label">Código postal</label>
+                <label for="terminos" class="form-label">
+                    Términos de pago
+                </label>
                 <input
                     type="text"
                     class="form-control"
-                    id="codigo_postal"
-                    name="codigo_postal"
-                    maxlength="10"
-                    value="<?= htmlspecialchars($datos['codigo_postal'], ENT_QUOTES, 'UTF-8') ?>"
+                    id="terminos"
+                    name="terminos"
+                    maxlength="6"
+                    value="<?= htmlspecialchars($datos['terminos'], ENT_QUOTES, 'UTF-8') ?>"
+                    placeholder="Ejemplo: Net 30"
                 >
             </div>
 

@@ -12,9 +12,9 @@ include __DIR__ . '/../../includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
     <div>
-        <h2 class="fw-bold mb-1">Gestión de tiendas</h2>
+        <h2 class="fw-bold mb-1">Gestion de tiendas</h2>
         <p class="text-muted mb-0">
-            Administración de las tiendas registradas en BookManager.
+            Administracion de las tiendas registradas en BookManager.
         </p>
     </div>
 
@@ -49,10 +49,12 @@ include __DIR__ . '/../../includes/header.php';
                     <tr>
                         <th>ID</th>
                         <th>Nombre</th>
-                        <th>Dirección</th>
+                        <th>Direccion</th>
                         <th>Ciudad</th>
                         <th>Estado</th>
-                        <th>Código postal</th>
+                        <th>Pais</th>
+                        <th>Codigo postal</th>
+                        <th>Terminos</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -63,7 +65,7 @@ include __DIR__ . '/../../includes/header.php';
                         <?php foreach ($tiendas as $t): ?>
                             <tr>
                                 <td class="fw-semibold">
-                                    #<?= (int) $t['id_tienda'] ?>
+                                    <?= htmlspecialchars((string) $t['id_tienda'], ENT_QUOTES, 'UTF-8') ?>
                                 </td>
 
                                 <td class="fw-semibold">
@@ -71,7 +73,7 @@ include __DIR__ . '/../../includes/header.php';
                                 </td>
 
                                 <td>
-                                    <?= htmlspecialchars($t['direccion'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+                                    <?= htmlspecialchars($t['direcc_tienda'] ?? '', ENT_QUOTES, 'UTF-8') ?>
                                 </td>
 
                                 <td>
@@ -83,17 +85,26 @@ include __DIR__ . '/../../includes/header.php';
                                 </td>
 
                                 <td>
-                                    <?= htmlspecialchars($t['codigo_postal'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+                                    <?= htmlspecialchars($t['pais'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+                                </td>
+
+                                <td>
+                                    <?= htmlspecialchars($t['cod_postal'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+                                </td>
+
+                                <td>
+                                    <?= htmlspecialchars($t['terminos'] ?? '', ENT_QUOTES, 'UTF-8') ?>
                                 </td>
 
                                 <td class="text-center text-nowrap">
-                                    <a href="editar.php?id=<?= (int) $t['id_tienda'] ?>"
+                                    <a href="editar.php?id=<?= urlencode((string) $t['id_tienda']) ?>"
                                        class="btn btn-sm btn-warning">
                                         <i class="fas fa-edit me-1"></i>Editar
                                     </a>
 
-                                    <a href="eliminar.php?id=<?= (int) $t['id_tienda'] ?>"
-                                       class="btn btn-sm btn-danger">
+                                    <a href="eliminar.php?id=<?= urlencode((string) $t['id_tienda']) ?>"
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('¿Estas seguro de eliminar esta tienda?');">
                                         <i class="fas fa-trash me-1"></i>Eliminar
                                     </a>
                                 </td>
@@ -103,7 +114,7 @@ include __DIR__ . '/../../includes/header.php';
                     <?php else: ?>
 
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="fas fa-store fa-2x mb-3 d-block"></i>
                                 No hay tiendas registradas.
                             </td>

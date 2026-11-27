@@ -1,13 +1,16 @@
 <?php
+ini_set('display_errors', '1');
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../models/Tienda.php';
 
 $db = (new Database())->conectar();
 $tiendaModel = new Tienda($db);
 
-$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+$id = trim((string) ($_GET['id'] ?? ''));
 
-if (!$id || $id <= 0) {
+if ($id === '' || strlen($id) > 4) {
     header('Location: index.php?error=id_invalido');
     exit;
 }
@@ -22,15 +25,15 @@ if (!$tienda) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $idConfirmado = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+    $idConfirmado = trim((string) ($_POST['id'] ?? ''));
 
-    if (!$idConfirmado || $idConfirmado !== $id) {
-        $error = 'El identificador dla tienda no es válido.';
+    if ($idConfirmado !== $id) {
+        $error = 'El identificador de la tienda no es valido.';
     } elseif ($tiendaModel->delete($id)) {
         header('Location: index.php?msg=eliminado');
         exit;
     } else {
-        $error = 'No se pudo eliminar la tienda. Inténtalo nuevamente.';
+        $error = 'No se pudo eliminar la tienda. Intentalo nuevamente.';
     }
 }
 
@@ -40,7 +43,7 @@ require_once __DIR__ . '/../../includes/header.php';
 <div class="mb-4">
     <h2 class="fw-bold mb-1">Eliminar tienda</h2>
     <p class="text-muted mb-0">
-        Confirma si deseas eliminar este registro del catálogo.
+        Confirma si deseas eliminar este registro del catalogo.
     </p>
 </div>
 
@@ -55,14 +58,14 @@ require_once __DIR__ . '/../../includes/header.php';
 
         <div class="alert alert-warning">
             <i class="fas fa-exclamation-triangle me-2"></i>
-            Esta acción eliminará permanentemente la tienda seleccionada.
+            Esta accion eliminara permanentemente la tienda seleccionada.
         </div>
 
         <h5 class="fw-bold mb-3">Datos de la tienda</h5>
 
         <p>
             <strong>ID:</strong>
-            <?= (int) $tienda['id_tienda'] ?>
+            <?= htmlspecialchars($tienda['id_tienda'], ENT_QUOTES, 'UTF-8') ?>
         </p>
 
         <p>
@@ -71,21 +74,30 @@ require_once __DIR__ . '/../../includes/header.php';
         </p>
 
         <p>
-    <strong>Dirección:</strong>
-    <?= htmlspecialchars($tienda['direccion'] ?? '', ENT_QUOTES, 'UTF-8') ?>
-</p>
+            <strong>Direccion:</strong>
+            <?= htmlspecialchars($tienda['direcc_tienda'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+        </p>
 
-<p>
-    <strong>Ciudad:</strong>
-    <?= htmlspecialchars($tienda['ciudad'] ?? '', ENT_QUOTES, 'UTF-8') ?>
-</p>
+        <p>
+            <strong>Ciudad:</strong>
+            <?= htmlspecialchars($tienda['ciudad'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+        </p>
 
-        <form method="POST" action="eliminar.php?id=<?= (int) $id ?>">
-            <input type="hidden" name="id" value="<?= (int) $id ?>">
+        <p>
+            <strong>Pais:</strong>
+            <?= htmlspecialchars($tienda['pais'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+        </p>
+
+        <form method="POST" action="eliminar.php?id=<?= urlencode($id) ?>">
+            <input
+                type="hidden"
+                name="id"
+                value="<?= htmlspecialchars($id, ENT_QUOTES, 'UTF-8') ?>"
+            >
 
             <div class="d-flex gap-2 mt-4">
                 <button type="submit" class="btn btn-danger">
-                    <i class="fas fa-trash me-2"></i>Confirmar eliminación
+                    <i class="fas fa-trash me-2"></i>Confirmar eliminacion
                 </button>
 
                 <a href="index.php" class="btn btn-secondary">
